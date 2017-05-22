@@ -24,13 +24,14 @@ describe('graphi', () => {
   });
 
   it('will handle graphql requests', (done) => {
-    const schema = `type Person {
-        firstname: String!
-        lastname: String!
+    const schema = `
+    type Person {
+      firstname: String!
+      lastname: String!
     }
 
     type Query {
-      person(firstname: String!): String!
+      person(firstname: String!): Person!
     }
     `;
 
@@ -38,7 +39,7 @@ describe('graphi', () => {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return new Promise((resolve) => {
-        resolve(JSON.stringify({ firstname: 'tom', lastname: 'arnold' }));
+        resolve({ firstname: 'tom', lastname: 'arnold' });
       });
     };
 
@@ -50,12 +51,12 @@ describe('graphi', () => {
     server.connection();
     server.register({ register: Graphi, options: { schema, functions } }, (err) => {
       expect(err).to.not.exist();
-      const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20id%0A%20%20%7D%0A%7D';
+      const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
 
       server.inject({ method: 'GET', url }, (res) => {
         expect(res.statusCode).to.equal(200);
         const result = JSON.parse(res.result);
-        expect(result.data.person).to.exist();
+        expect(result.data.person.lastname).to.equal('arnold');
         done();
       });
     });

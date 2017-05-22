@@ -11,12 +11,13 @@ const schema = `type Person {
   }
 
   type Query {
-    person(firstname: String!): String!
+    person(firstname: String!): Person!
   }`;
 
 const getPerson = function (args, request) {
   return new Promise((resolve) => {
-    resolve('My Person');
+    // args.firstname will be set, request is the hapi request object
+    resolve({ firstname: 'billy', lastname: 'jean' });
   });
 };
 
