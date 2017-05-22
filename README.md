@@ -1,0 +1,2 @@
+# graphi
+hapi graphql plugin
