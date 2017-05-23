@@ -1,6 +1,8 @@
 # graphi
 hapi graphql server plugin
 
+[![Build Status](https://secure.travis-ci.org/geek/graphi.svg)](http://travis-ci.org/geek/graphi)
+
 
 ## Usage
 
