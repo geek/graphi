@@ -5,14 +5,16 @@ hapi graphql server plugin
 ## Usage
 
 ```js
-const schema = `type Person {
+const schema = `
+  type Person {
     firstname: String!
     lastname: String!
   }
 
   type Query {
     person(firstname: String!): Person!
-  }`;
+  }
+`;
 
 const getPerson = function (args, request) {
   return new Promise((resolve) => {

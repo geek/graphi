@@ -25,14 +25,14 @@ describe('graphi', () => {
 
   it('will handle graphql requests', (done) => {
     const schema = `
-    type Person {
-      firstname: String!
-      lastname: String!
-    }
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
 
-    type Query {
-      person(firstname: String!): Person!
-    }
+      type Query {
+        person(firstname: String!): Person!
+      }
     `;
 
     const getPerson = function (args, request) {
