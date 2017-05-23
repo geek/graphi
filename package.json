@@ -1,6 +1,6 @@
 {
   "name": "graphi",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "hapi graphql plugin",
   "main": "lib",
   "scripts": {
@@ -11,7 +11,12 @@
     "type": "git",
     "url": "git+https://github.com/geek/graphi.git"
   },
-  "keywords": ["hapi", "plugin", "graphql", "server"],
+  "keywords": [
+    "hapi",
+    "plugin",
+    "graphql",
+    "server"
+  ],
   "author": "wyatt",
   "license": "MPL-2.0",
   "bugs": {
