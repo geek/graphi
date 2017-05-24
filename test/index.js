@@ -201,10 +201,10 @@ describe('graphi', () => {
 
     const server = new Hapi.Server();
     server.connection();
-    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+    server.register({ register: Graphi, options: { schema, resolvers } }, { routes: { prefix: '/test' } }, (err) => {
       expect(err).to.not.exist();
 
-      server.inject({ method: 'GET', url: '/graphiql' }, (res) => {
+      server.inject({ method: 'GET', url: '/test/graphiql' }, (res) => {
         expect(res.statusCode).to.equal(200);
         expect(res.result).to.contain('<html>');
         done();
