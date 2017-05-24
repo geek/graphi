@@ -25,13 +25,13 @@ const getPerson = function (args, request) {
   });
 };
 
-const functions = {
+const resolvers = {
   person: getPerson
 };
 
 const server = new Hapi.Server();
 server.connection();
-server.register({ register: Graphi, options: { schema, functions } }, (err) => {
+server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
   // server is ready to be started
 });
 ```
@@ -39,6 +39,7 @@ server.register({ register: Graphi, options: { schema, functions } }, (err) => {
 
 ## Options
 
-- `path` - HTTP path to serve graphql requests. Default is `/graphql`
+- `graphqlPath` - HTTP path to serve graphql requests. Default is `/graphql`
+- `graphiqlPath` - HTTP path to serve the GraphiQL UI. Set to '' or false to disable. Default is `/graphiql`
 - `schema` - graphql schema either as a string or parsed schema object
-- `functions` - query and mutation functions mapped to their respective keys
+- `resolvers` - query and mutation functions mapped to their respective keys

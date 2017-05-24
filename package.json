@@ -30,7 +30,9 @@
     "lab": "13.x.x"
   },
   "dependencies": {
+    "boom": "4.x.x",
+    "graphql": "0.9.x",
     "graphql-server-core": "0.7.x",
-    "graphql": "0.9.x"
+    "graphql-server-module-graphiql": "0.7.x"
   }
 }
