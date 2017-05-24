@@ -5,7 +5,7 @@
   "main": "lib",
   "scripts": {
     "lint": "belly-button",
-    "test": "lab"
+    "test": "npm run lint && lab -t 97"
   },
   "repository": {
     "type": "git",
