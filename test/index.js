@@ -23,7 +23,7 @@ describe('graphi', () => {
     });
   });
 
-  it('will handle graphql GET requests', (done) => {
+  it('will handle graphql GET requests with promise resolver', (done) => {
     const schema = `
       type Person {
         firstname: String!
@@ -41,6 +41,43 @@ describe('graphi', () => {
       return new Promise((resolve) => {
         resolve({ firstname: 'tom', lastname: 'arnold' });
       });
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+      expect(err).to.not.exist();
+      const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
+
+      server.inject({ method: 'GET', url }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        const result = JSON.parse(res.result);
+        expect(result.data.person.lastname).to.equal('arnold');
+        done();
+      });
+    });
+  });
+
+  it('will handle graphql GET requests with callback resolver', (done) => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request, cb) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      cb(null, { firstname: 'tom', lastname: 'arnold' });
     };
 
     const resolvers = {
@@ -138,7 +175,7 @@ describe('graphi', () => {
     });
   });
 
-  it('will wrap errors with the resolver', (done) => {
+  it('will wrap errors with a promise resolver', (done) => {
     const schema = `
       type Person {
         firstname: String!
@@ -156,6 +193,43 @@ describe('graphi', () => {
       return new Promise((resolve, reject) => {
         reject(new Error('my custom error'));
       });
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+      expect(err).to.not.exist();
+      const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
+
+      server.inject({ method: 'GET', url }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        const result = JSON.parse(res.result);
+        expect(result.errors).to.exist();
+        done();
+      });
+    });
+  });
+
+  it('will wrap errors with a callback resolver', (done) => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request, cb) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      cb(new Error('my custom error'));
     };
 
     const resolvers = {
