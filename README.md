@@ -8,7 +8,7 @@ hapi graphql server plugin
 
 ### With promises
 
-```js
+```javascript
 const schema = `
   type Person {
     firstname: String!
@@ -40,6 +40,7 @@ server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
 
 ### With callbacks
 
+```javascript
 const schema = `
   type Person {
     firstname: String!
