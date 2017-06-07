@@ -354,4 +354,57 @@ describe('graphi', () => {
       });
     });
   });
+
+  it('will handle nested queries', (done) => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        friends(firstname: String!): [Person]
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+
+      return new Promise((resolve) => {
+        resolve({ firstname: 'billy', lastname: 'jean', friends: getFriends });
+      });
+    };
+
+    const getFriends = function (args, request) {
+      expect(args.firstname).to.equal('michael');
+
+      return new Promise((resolve) => {
+        resolve([{ firstname: 'michael', lastname: 'jackson' }]);
+      });
+    };
+
+    const resolvers = {
+      person: getPerson,
+      friends: getFriends
+    };
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+      expect(err).to.not.exist();
+      const payload = {
+        query: 'query GetPersonsFriend($firstname: String!, $friendsFirstname: String!) { person(firstname: $firstname) { friends(firstname: $friendsFirstname) { lastname } } }',
+        variables: { firstname: 'billy', friendsFirstname: 'michael' }
+      };
+
+      server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        const result = JSON.parse(res.result);
+        expect(result.data.person.friends[0].lastname).to.equal('jackson');
+        done();
+      });
+    });
+  });
 });
