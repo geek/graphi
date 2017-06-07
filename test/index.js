@@ -368,20 +368,20 @@ describe('graphi', () => {
       }
     `;
 
+    const getFriends = function (args, request) {
+      expect(args.firstname).to.equal('michael');
+
+      return new Promise((resolve) => {
+        resolve([{ firstname: 'michael', lastname: 'jackson' }]);
+      });
+    };
+
     const getPerson = function (args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
 
       return new Promise((resolve) => {
         resolve({ firstname: 'billy', lastname: 'jean', friends: getFriends });
-      });
-    };
-
-    const getFriends = function (args, request) {
-      expect(args.firstname).to.equal('michael');
-
-      return new Promise((resolve) => {
-        resolve([{ firstname: 'michael', lastname: 'jackson' }]);
       });
     };
 
