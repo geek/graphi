@@ -1,7 +1,6 @@
 'use strict';
 
 
-const Code = require('code');
 const Hapi = require('hapi');
 const Lab = require('lab');
 const Graphi = require('../');
@@ -10,7 +9,7 @@ const Graphi = require('../');
 const lab = exports.lab = Lab.script();
 const describe = lab.describe;
 const it = lab.it;
-const expect = Code.expect;
+const expect = Lab.expect;
 
 
 describe('graphi', () => {
