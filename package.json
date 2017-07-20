@@ -25,13 +25,13 @@
   "homepage": "https://github.com/geek/graphi#readme",
   "devDependencies": {
     "belly-button": "3.x.x",
-    "hapi": "16.x.x",
-    "lab": "14.x.x"
+    "hapi": "^16.5.0",
+    "lab": "^14.1.1"
   },
   "dependencies": {
-    "boom": "5.x.x",
-    "graphql": "0.10.x",
-    "graphql-server-core": "0.9.x",
-    "graphql-server-module-graphiql": "0.9.x"
+    "boom": "^5.2.0",
+    "graphql": "^0.10.5",
+    "graphql-server-core": "^1.0.2",
+    "graphql-server-module-graphiql": "^1.0.2"
   }
 }
