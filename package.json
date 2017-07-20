@@ -1,6 +1,6 @@
 {
   "name": "graphi",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "hapi graphql plugin",
   "main": "lib",
   "scripts": {
