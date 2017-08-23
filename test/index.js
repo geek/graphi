@@ -96,6 +96,42 @@ describe('graphi', () => {
     });
   });
 
+  it('will handle graphql POST requests with query', (done) => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return Promise.resolve({ firstname: '', lastname: 'jean' });
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+      expect(err).to.not.exist();
+      const payload = { query: 'query { person(firstname: "billy") { lastname } }' };
+
+      server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        expect(res.result.data.person.lastname).to.equal('jean');
+        done();
+      });
+    });
+  });
+
   it('will handle graphql POST requests with mutations', (done) => {
     const schema = `
       type Person {
@@ -144,6 +180,42 @@ describe('graphi', () => {
       server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
         expect(res.statusCode).to.equal(200);
         expect(res.result.data.createPerson.lastname).to.equal('jean');
+        done();
+      });
+    });
+  });
+
+  it('will error with requests that include unknown directives', (done) => {
+    const schema = `
+      type Person {
+        firstname: String! @limit(min: 1)
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return Promise.resolve({ firstname: '', lastname: 'jean' });
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
+      expect(err).to.not.exist();
+      const payload = { query: 'query { person(firstname: "billy") { lastname @foo(min: 2) } }' };
+
+      server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
+        expect(res.statusCode).to.equal(400);
+        expect(res.result.message).to.contain('Unknown directive');
         done();
       });
     });
