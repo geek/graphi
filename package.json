@@ -32,6 +32,6 @@
   "dependencies": {
     "boom": "^5.2.0",
     "graphql": "^0.10.5",
-    "graphql-server-module-graphiql": "^1.1.0"
+    "graphql-server-module-graphiql": "^1.1.2"
   }
 }
