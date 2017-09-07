@@ -1,11 +1,14 @@
 'use strict';
 
 
+const GraphQL = require('graphql');
 const Hapi = require('hapi');
 const Lab = require('lab');
+const Scalars = require('scalars');
 const Graphi = require('../');
 
 
+const { GraphQLObjectType, GraphQLSchema, GraphQLString } = GraphQL;
 const lab = exports.lab = Lab.script();
 const describe = lab.describe;
 const it = lab.it;
@@ -96,11 +99,44 @@ describe('graphi', () => {
     });
   });
 
+  it('will handle graphql GET requests GraphQL instance schema', (done) => {
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: 'RootQueryType',
+        fields: {
+          person: {
+            type: GraphQLString,
+            args: {
+              firstname: { type: new Scalars.JoiString({ min: [2, 'utf8'], max: 10 }) }
+            },
+            resolve: (root, { firstname }, request) => {
+              return Promise.resolve(firstname);
+            }
+          }
+        }
+      })
+    });
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema } }, (err) => {
+      expect(err).to.not.exist();
+      const url = '/graphql?query=' + encodeURIComponent('{ person(firstname: "tom")}');
+
+      server.inject({ method: 'GET', url }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        expect(res.result.data.person).to.equal('tom');
+        done();
+      });
+    });
+  });
+
   it('will handle graphql POST requests with query', (done) => {
     const schema = `
       type Person {
         firstname: String!
         lastname: String!
+        email: String!
       }
 
       type Query {
@@ -111,7 +147,7 @@ describe('graphi', () => {
     const getPerson = function (args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
-      return Promise.resolve({ firstname: '', lastname: 'jean' });
+      return Promise.resolve({ firstname: '', lastname: 'jean', email: 'what' });
     };
 
     const resolvers = {
@@ -122,11 +158,43 @@ describe('graphi', () => {
     server.connection();
     server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
       expect(err).to.not.exist();
-      const payload = { query: 'query { person(firstname: "billy") { lastname } }' };
+      const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
 
       server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
         expect(res.statusCode).to.equal(200);
         expect(res.result.data.person.lastname).to.equal('jean');
+        done();
+      });
+    });
+  });
+
+  it('will handle graphql POST requests with query using GraphQL schema objects', (done) => {
+    const schema = new GraphQL.GraphQLSchema({
+      query: new GraphQL.GraphQLObjectType({
+        name: 'RootQueryType',
+        fields: {
+          person: {
+            type: GraphQL.GraphQLString,
+            args: { firstname: { type: GraphQL.GraphQLString } },
+            resolve: (root, args) => {
+              expect(args.firstname).to.equal('billy');
+              return Promise.resolve('jean');
+            }
+          }
+        }
+      })
+    });
+
+
+    const server = new Hapi.Server();
+    server.connection();
+    server.register({ register: Graphi, options: { schema } }, (err) => {
+      expect(err).to.not.exist();
+      const payload = { query: 'query { person(firstname: "billy") }' };
+
+      server.inject({ method: 'POST', url: '/graphql', payload }, (res) => {
+        expect(res.statusCode).to.equal(200);
+        expect(res.result.data.person).to.equal('jean');
         done();
       });
     });

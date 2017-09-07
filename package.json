@@ -27,11 +27,12 @@
   "devDependencies": {
     "belly-button": "4.x.x",
     "hapi": "^16.5.0",
-    "lab": "^14.1.1"
+    "lab": "^14.1.1",
+    "scalars": "^0.0.2"
   },
   "dependencies": {
     "boom": "^5.2.0",
-    "graphql": "^0.10.5",
+    "graphql": "^0.11.2",
     "graphql-server-module-graphiql": "^1.1.2"
   }
 }
