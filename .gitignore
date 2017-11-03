@@ -58,3 +58,4 @@ typings/
 .env
 
 .eslintcache
+package-lock.json
