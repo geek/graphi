@@ -27,18 +27,15 @@ const schema = `
 `;
 
 const getPerson = function (args, request) {
-  return Promise.resolve({ firstname: 'billy', lastname: 'jean' });
+  return { firstname: 'billy', lastname: 'jean' };
 };
 
 const resolvers = {
   person: getPerson
 };
 
-const server = new Hapi.Server();
-server.connection();
-server.register({ register: Graphi, options: { schema, resolvers } }, (err) => {
-  // server is ready to be started
-});
+const server = Hapi.server();
+await server.register({ plugin: Graphi, options: { schema, resolvers } });
 ```
 
 ### With GraphQLSchema Instance
@@ -54,16 +51,13 @@ const schema = new GraphQLSchema({
           firstname: { type: new Scalars.JoiString({ min: [2, 'utf8'], max: 10 }) }
         },
         resolve: (root, { firstname }, request) => {
-          return Promise.resolve(firstname);
+          return firstname;
         }
       }
     }
   })
 });
 
-const server = new Hapi.Server();
-server.connection();
-server.register({ register: Graphi, options: { schema } }, (err) => {
-  // server is ready to be started
-});
+const server = Hapi.server();
+await server.register({ plugin: Graphi, options: { schema } });
 ```
