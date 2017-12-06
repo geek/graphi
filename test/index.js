@@ -532,4 +532,64 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(400);
   });
+
+  it('will handle graphql POST request without a payload', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+
+    const res = await server.inject({ method: 'POST', url: '/graphql' });
+    expect(res.statusCode).to.equal(400);
+  });
+
+  it('will handle graphql OPTIONS request when cors is disabled', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+
+    const res = await server.inject({ method: 'OPTIONS', url: '/graphql' });
+    expect(res.statusCode).to.equal(200);
+  });
 });
