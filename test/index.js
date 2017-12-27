@@ -7,6 +7,7 @@ const Hapi = require('hapi');
 const Lab = require('lab');
 const Scalars = require('scalars');
 const Graphi = require('../');
+const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 
 
 const { GraphQLObjectType, GraphQLSchema, GraphQLString } = GraphQL;
@@ -15,6 +16,7 @@ const describe = lab.describe;
 const it = lab.it;
 const expect = Code.expect;
 
+const internals = {};
 
 describe('graphi', () => {
   it('can be registered with hapi', async () => {
@@ -592,4 +594,192 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'OPTIONS', url: '/graphql' });
     expect(res.statusCode).to.equal(200);
   });
+
+
+  it('authStrategy false route does not use bearer token', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, resolvers, authStrategy: false } }
+    ];
+
+    const server = Hapi.server();
+
+    await server.register(plugins);
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.lastname).to.equal('jean');
+  });
+
+  it('authStrategy defaults to false when option is not configured', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, resolvers } }
+    ];
+
+    const server = Hapi.server();
+
+    await server.register(plugins);
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.lastname).to.equal('jean');
+  });
+
+
+  it('requests fails without valid auth token', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'default' } }
+    ];
+
+    const server = Hapi.server();
+
+    await server.register(plugins);
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+
+    expect(res.statusCode).to.equal(401);
+    expect(res.result.message).to.equal('Missing authentication');
+  });
+
+  it('request succeeds with valid auth token', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'default' } }
+    ];
+
+    const server = Hapi.server();
+
+    await server.register(plugins);
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+
+    const res = await server.inject({ method: 'POST', url: '/graphql', headers: { authorization: 'Bearer 12345678' }, payload });
+
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.lastname).to.equal('jean');
+  });
 });
+
+
+// auth token strategy plugin
+
+const defaultValidateFunc = (request, token) => {
+  return {
+    isValid: token === '12345678',
+    credentials: { token }
+  };
+};
+
+internals.authTokenStrategy = {
+  name: 'authtoken',
+  version: '1.0.0',
+  description: 'register hapi-auth-bearer-token strategy.',
+  register: function (server, options) {
+    server.auth.strategy('default', 'bearer-access-token', {
+      validate: defaultValidateFunc
+    });
+    server.auth.default('default');
+  }
+};
