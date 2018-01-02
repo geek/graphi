@@ -53,8 +53,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
+    await server.initialize();
 
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('arnold');
@@ -80,8 +81,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema } });
-    const url = '/graphql?query=' + encodeURIComponent('{ person(firstname: "tom")}');
+    await server.initialize();
 
+    const url = '/graphql?query=' + encodeURIComponent('{ person(firstname: "tom")}');
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person).to.equal('tom');
@@ -112,8 +114,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+    await server.initialize();
 
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
@@ -138,8 +141,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema } });
-    const payload = { query: 'query { person(firstname: "billy") }' };
+    await server.initialize();
 
+    const payload = { query: 'query { person(firstname: "billy") }' };
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person).to.equal('jean');
@@ -182,8 +186,56 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const payload = { query: 'mutation { createPerson(firstname: "billy", lastname: "jean") { lastname } }' };
+    await server.initialize();
 
+    const payload = { query: 'mutation { createPerson(firstname: "billy", lastname: "jean") { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.createPerson.lastname).to.equal('jean');
+  });
+
+  it('will handle graphql POST requests with mutations served from mutation routes', async () => {
+    const schema = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+      }
+
+      type Mutation {
+        createPerson(firstname: String!, lastname: String!): Person!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'billy', lastname: 'jean' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+
+    server.route({
+      method: 'graphql',
+      path: '/createPerson',
+      handler: (request, h) => {
+        expect(request.payload.firstname).to.equal('billy');
+        expect(request.payload.lastname).to.equal('jean');
+        return { firstname: 'billy', lastname: 'jean' };
+      }
+    });
+
+    await server.initialize();
+    const payload = { query: 'mutation { createPerson(firstname: "billy", lastname: "jean") { lastname } }' };
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.createPerson.lastname).to.equal('jean');
@@ -213,8 +265,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const payload = { query: 'query { person(firstname: "billy") { lastname @foo(min: 2) } }' };
+    await server.initialize();
 
+    const payload = { query: 'query { person(firstname: "billy") { lastname @foo(min: 2) } }' };
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(400);
     expect(res.result.message).to.contain('Unknown directive');
@@ -244,8 +297,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=invalid';
+    await server.initialize();
 
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=invalid';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(400);
   });
@@ -273,9 +327,10 @@ describe('graphi', () => {
     };
 
     const server = Hapi.server();
-    server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query={}';
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
+    const url = '/graphql?query={}';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(400);
   });
@@ -303,9 +358,10 @@ describe('graphi', () => {
     };
 
     const server = Hapi.server();
-    server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
     await server.inject({ method: 'GET', url });
   });
 
@@ -333,8 +389,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
+    await server.initialize();
 
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(200);
     expect(res.result.errors).to.exist();
@@ -364,8 +421,9 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
-    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
+    await server.initialize();
 
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(200);
     expect(res.result.errors).to.exist();
@@ -393,6 +451,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } }, { routes: { prefix: '/test' } });
+    await server.initialize();
 
     const res = await server.inject({ method: 'GET', url: '/test/graphiql' });
     expect(res.statusCode).to.equal(200);
@@ -421,6 +480,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
     const res = await server.inject({ method: 'GET', url: '/graphiql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D' });
     expect(res.statusCode).to.equal(200);
@@ -449,6 +509,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers, graphiqlPath: false } });
+    await server.initialize();
 
     const res = await server.inject({ method: 'GET', url: '/graphiql' });
     expect(res.statusCode).to.equal(404);
@@ -487,11 +548,12 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
     const payload = {
       query: 'query GetPersonsFriend($firstname: String!, $friendsFirstname: String!) { person(firstname: $firstname) { friends(firstname: $friendsFirstname) { lastname } } }',
       variables: { firstname: 'billy', friendsFirstname: 'michael' }
     };
-
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.friends[0].lastname).to.equal('jackson');
@@ -530,6 +592,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
     const payload = {
       query: 'query GetPersonsF} }',
@@ -565,6 +628,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
     const res = await server.inject({ method: 'POST', url: '/graphql' });
     expect(res.statusCode).to.equal(400);
@@ -595,6 +659,7 @@ describe('graphi', () => {
 
     const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
 
     const res = await server.inject({ method: 'OPTIONS', url: '/graphql' });
     expect(res.statusCode).to.equal(200);
@@ -633,9 +698,9 @@ describe('graphi', () => {
     const server = Hapi.server();
 
     await server.register(plugins);
+    await server.initialize();
 
     const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
-
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
 
     expect(res.statusCode).to.equal(200);
@@ -674,9 +739,9 @@ describe('graphi', () => {
     const server = Hapi.server();
 
     await server.register(plugins);
+    await server.initialize();
 
     const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
-
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
 
     expect(res.statusCode).to.equal(200);
@@ -710,15 +775,15 @@ describe('graphi', () => {
     const plugins = [
       { plugin: HapiAuthBearerToken, options: {}},
       { plugin: internals.authTokenStrategy, options: {}},
-      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'default' } }
+      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'test' } }
     ];
 
     const server = Hapi.server();
 
     await server.register(plugins);
+    await server.initialize();
 
     const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
-
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
 
     expect(res.statusCode).to.equal(401);
@@ -751,19 +816,83 @@ describe('graphi', () => {
     const plugins = [
       { plugin: HapiAuthBearerToken, options: {}},
       { plugin: internals.authTokenStrategy, options: {}},
-      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'default' } }
+      { plugin: Graphi, options: { schema, resolvers, authStrategy: 'test' } }
     ];
 
     const server = Hapi.server();
 
     await server.register(plugins);
+    await server.initialize();
 
     const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
-
     const res = await server.inject({ method: 'POST', url: '/graphql', headers: { authorization: 'Bearer 12345678' }, payload });
 
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
+  });
+
+  it('route resolvers support separate auth schemes', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+        human(firstname: String!): Person!
+      }
+    `;
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, authStrategy: false } }
+    ];
+
+    const server = Hapi.server();
+    await server.register(plugins);
+
+    server.route({
+      method: 'graphql',
+      path: '/person',
+      config: {
+        auth: 'test',
+        handler: (request, h) => {
+          expect(request.payload.firstname).to.equal('billy');
+          return { firstname: '', lastname: 'jean', email: 'what' };
+        }
+      }
+    });
+
+    server.route({
+      method: 'graphql',
+      path: '/human',
+      config: {
+        auth: false,
+        handler: (request, h) => {
+          expect(request.payload.firstname).to.equal('billy');
+          return { firstname: 'foo', lastname: 'bar', email: 'what' };
+        }
+      }
+    });
+
+    await server.initialize();
+
+    const payload1 = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+    const res1 = await server.inject({ method: 'POST', url: '/graphql', headers: { authorization: 'Bearer 12345678' }, payload: payload1 });
+    expect(res1.statusCode).to.equal(200);
+    expect(res1.result.data.person.lastname).to.equal('jean');
+
+    const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload1 });
+    expect(res2.statusCode).to.equal(200);
+    expect(res2.result.errors[0].message).to.equal('Missing authentication');
+
+    const payload2 = { query: 'query { human(firstname: "billy") { lastname, email } }' };
+    const res3 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
+    expect(res3.statusCode).to.equal(200);
+    expect(res3.result.data.human.lastname).to.equal('bar');
   });
 });
 
@@ -782,9 +911,9 @@ internals.authTokenStrategy = {
   version: '1.0.0',
   description: 'register hapi-auth-bearer-token strategy.',
   register: function (server, options) {
-    server.auth.strategy('default', 'bearer-access-token', {
+    server.auth.strategy('test', 'bearer-access-token', {
       validate: defaultValidateFunc
     });
-    server.auth.default('default');
+    server.auth.default('test');
   }
 };

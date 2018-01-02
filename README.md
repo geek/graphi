@@ -10,7 +10,7 @@ hapi GraphQL server plugin
 - `graphiqlPath` - HTTP path to serve the GraphiQL UI. Set to '' or false to disable. Default is `/graphiql`
 - `schema` - graphql schema either as a string or as a GraphQLSchema instance
 - `resolvers` - query and mutation functions mapped to their respective keys. Resolvers should return a promise when performing asynchronous operations.
-- `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`. 
+- `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
 
 
 ## Usage
@@ -60,5 +60,36 @@ const schema = new GraphQLSchema({
 });
 
 const server = Hapi.server();
+await server.register({ plugin: Graphi, options: { schema } });
+```
+
+
+### With hapi routes
+
+You can also define resolvers as hapi routes. As a result, each resolver is able to benefit from route caching, custom auth strategies, and all of the other powerful hapi routing features. Each route should use the custom method `'graphql'` and the path should be the key name for the resolver prefixed with `/`. You can also mix and match existing resolvers with routes.
+
+```javascript
+const schema = `
+  type Person {
+    firstname: String!
+    lastname: String!
+  }
+
+  type Query {
+    person(firstname: String!): Person!
+  }
+`;
+
+
+const server = Hapi.server();
+server.route({
+  method: 'graphql',
+  path: '/person',
+  handler: (request, h) => {
+    // request.payload contains any arguments sent to the query
+    return { firstname: 'billy', lastname: 'jean' };
+  }
+});
+
 await server.register({ plugin: Graphi, options: { schema } });
 ```
