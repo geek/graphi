@@ -1,14 +1,15 @@
 'use strict';
 
-
 const Code = require('code');
 const GraphQL = require('graphql');
 const Hapi = require('hapi');
+const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Lab = require('lab');
 const Scalars = require('scalars');
 const Graphi = require('../');
-const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 
+
+// Test shortcuts
 
 const { GraphQLObjectType, GraphQLSchema, GraphQLString } = GraphQL;
 const lab = exports.lab = Lab.script();
@@ -16,7 +17,11 @@ const describe = lab.describe;
 const it = lab.it;
 const expect = Code.expect;
 
+
+// Declare internals
+
 const internals = {};
+
 
 describe('graphi', () => {
   it('can be registered with hapi', async () => {
