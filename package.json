@@ -28,6 +28,7 @@
     "belly-button": "4.x.x",
     "code": "5.x.x",
     "hapi": "17.x.x",
+    "hapi-auth-bearer-token": "^6.0.1",
     "lab": "15.x.x",
     "scalars": "0.x.x"
   },

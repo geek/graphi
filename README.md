@@ -10,6 +10,7 @@ hapi GraphQL server plugin
 - `graphiqlPath` - HTTP path to serve the GraphiQL UI. Set to '' or false to disable. Default is `/graphiql`
 - `schema` - graphql schema either as a string or as a GraphQLSchema instance
 - `resolvers` - query and mutation functions mapped to their respective keys. Resolvers should return a promise when performing asynchronous operations.
+- `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`. 
 
 
 ## Usage
