@@ -831,6 +831,38 @@ describe('graphi', () => {
     expect(res.result.data.person.lastname).to.equal('jean');
   });
 
+  it('request for /graphiql succeeds with valid auth token', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const plugins = [
+      { plugin: HapiAuthBearerToken, options: {}},
+      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: Graphi, options: { schema, resolvers: {}, graphiAuthStrategy: 'test' } }
+    ];
+
+    const server = Hapi.server();
+
+    await server.register(plugins);
+    await server.initialize();
+
+    const res1 = await server.inject({ method: 'GET', url: '/graphiql', headers: { authorization: 'Bearer 12345678' } });
+    expect(res1.statusCode).to.equal(200);
+    expect(res1.result).to.contain('<html>');
+
+    const res2 = await server.inject({ method: 'GET', url: '/graphiql' });
+    expect(res2.statusCode).to.equal(401);
+  });
+
   it('route resolvers support separate auth schemes', async () => {
     const schema = `
       type Person {

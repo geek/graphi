@@ -11,6 +11,7 @@ hapi GraphQL server plugin
 - `schema` - graphql schema either as a string or as a GraphQLSchema instance
 - `resolvers` - query and mutation functions mapped to their respective keys. Resolvers should return a promise when performing asynchronous operations.
 - `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
+- `graphiAuthStrategy` - (optional) Authentication strategy to apply to `/graphiql` route.  Default is `false`.
 
 
 ## Usage
