@@ -29,6 +29,10 @@ describe('graphi', () => {
     await server.register(Graphi);
   });
 
+  it('exposes graphql library as a property', () => {
+    expect(Graphi.graphql).to.exist();
+  });
+
   it('will handle graphql GET requests with promise resolver', async () => {
     const schema = `
       type Person {
