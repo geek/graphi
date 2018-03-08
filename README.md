@@ -13,6 +13,10 @@ hapi GraphQL server plugin
 - `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
 - `graphiAuthStrategy` - (optional) Authentication strategy to apply to `/graphiql` route.  Default is `false`.
 
+## API
+
+- `graphql` - exported Graphql module that graphi uses
+- `makeExecutableSchema({ schema, resolvers })` - combine resolvers with the schema definition into a `GraphQLSchema`.
 
 ## Usage
 

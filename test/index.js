@@ -932,6 +932,91 @@ describe('graphi', () => {
   });
 });
 
+describe('makeExecutableSchema()', () => {
+  it('converts a graphql schema into executable graphql objects', () => {
+    const schema = `
+      input Someone {
+        name: String
+      }
+
+      interface IPerson {
+        firstname: String
+      }
+
+      type Person implements IPerson {
+        firstname: String!
+        lastname: String!
+        email: String!
+        description: People
+        ability: Ability
+        search: SearchResult
+      }
+
+      scalar People
+
+      enum Ability {
+        COOK
+        PROGRAM
+      }
+
+      union SearchResult = Person | String
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        person: () => {}
+      },
+      People: {
+        description: () => {}
+      },
+      Ability: {
+        COOK: () => {}
+      },
+      Person: {
+        ability: () => {},
+        description: () => {},
+        search: () => {}
+      },
+      IPerson: {
+        firstname: () => {}
+      },
+      Someone: {
+        name: () => {}
+      }
+    };
+
+    const executable = Graphi.makeExecutableSchema({ schema, resolvers });
+    expect(executable instanceof Graphi.graphql.GraphQLSchema).to.be.true();
+  });
+
+  it('errors when resolver missing from schema', () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    let err;
+    try {
+      Graphi.makeExecutableSchema({ schema, resolvers: { Query: { human: () => {} } } });
+    } catch (ex) {
+      err = ex;
+    }
+
+    expect(err).to.be.error();
+  });
+});
+
 
 // auth token strategy plugin
 
