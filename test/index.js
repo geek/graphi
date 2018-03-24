@@ -245,6 +245,108 @@ describe('graphi', () => {
     expect(res.result.data.createPerson.lastname).to.equal('jean');
   });
 
+  it('will handle graphql requests to resolver routes when configured with prefix', async () => {
+    const schema = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+      }
+
+      type Mutation {
+        createPerson(firstname: String!, lastname: String!): Person!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'billy', lastname: 'jean' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers }, routes: { prefix: '/test' } });
+
+    server.route({
+      method: 'graphql',
+      path: '/createPerson',
+      handler: (request, h) => {
+        expect(request.payload.firstname).to.equal('billy');
+        expect(request.payload.lastname).to.equal('jean');
+        return { firstname: 'billy', lastname: 'jean' };
+      }
+    });
+
+    await server.initialize();
+    const payload = { query: 'mutation { createPerson(firstname: "billy", lastname: "jean") { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/test/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.createPerson.lastname).to.equal('jean');
+  });
+
+  it('will handle graphql requests to resolver routes inside a plugin when configured with prefix', async () => {
+    const schema = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+      }
+
+      type Mutation {
+        createPerson(firstname: String!, lastname: String!): Person!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'billy', lastname: 'jean' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers }, routes: { prefix: '/test' } });
+
+    const plugin = {
+      name: 'test',
+      version: '0.0.0',
+      register: (server) => {
+        server.route({
+          method: 'graphql',
+          path: '/createPerson',
+          handler: (request, h) => {
+            expect(request.payload.firstname).to.equal('billy');
+            expect(request.payload.lastname).to.equal('jean');
+            return { firstname: 'billy', lastname: 'jean' };
+          }
+        });
+      }
+    };
+
+    await server.register({ plugin, routes: { prefix: '/foo' } });
+
+    await server.initialize();
+    const payload = { query: 'mutation { createPerson(firstname: "billy", lastname: "jean") { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/test/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.createPerson.lastname).to.equal('jean');
+  });
+
   it('will error with requests that include unknown directives', async () => {
     const schema = `
       type Person {
