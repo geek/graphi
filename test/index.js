@@ -6,6 +6,7 @@ const Hapi = require('hapi');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Lab = require('lab');
 const Scalars = require('scalars');
+const Wreck = require('wreck');
 const Graphi = require('../');
 
 
@@ -243,6 +244,54 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.createPerson.lastname).to.equal('jean');
+  });
+
+  it('won\'t serve external HTTP requests to graphql method handlers', async () => {
+    const schema = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+      }
+
+      type Mutation {
+        createPerson(firstname: String!, lastname: String!): Person!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'billy', lastname: 'jean' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server({ port: 0 });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+
+    server.route({
+      method: 'graphql',
+      path: '/createPerson',
+      handler: (request, h) => {
+        expect(request.payload.firstname).to.equal('billy');
+        expect(request.payload.lastname).to.equal('jean');
+        return { firstname: 'billy', lastname: 'jean' };
+      }
+    });
+
+    await server.start();
+
+    const payload = { firstname: 'billy', lastname: 'jean' };
+    const res = await Wreck.request('GRAPHQL', `http://0.0.0.0:${server.info.port}/createPerson`, { payload });
+    expect(res.statusCode).to.equal(400);
+    await server.stop();
   });
 
   it('will handle graphql requests to resolver routes when configured with prefix', async () => {
