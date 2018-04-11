@@ -127,6 +127,39 @@ describe('graphi', () => {
     expect(res.result.data.person.lastname).to.equal('jean');
   });
 
+  it('will provide a friendly error when the graphql query is incorrect', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const payload = { query: 'query { person(firstname: "billy) { lastname, email } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(400);
+    expect(res.payload).to.contain('Unterminated string');
+  });
+
   it('will handle graphql POST requests with query using GraphQL schema objects', async () => {
     const schema = new GraphQL.GraphQLSchema({
       query: new GraphQL.GraphQLObjectType({
