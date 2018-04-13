@@ -16,7 +16,7 @@ hapi GraphQL server plugin
 ## API
 
 - `graphql` - exported Graphql module that graphi uses
-- `makeExecutableSchema({ schema, resolvers })` - combine resolvers with the schema definition into a `GraphQLSchema`.
+- `makeExecutableSchema({ schema, resolvers, preResolve })` - combine resolvers with the schema definition into a `GraphQLSchema`.
 
 ## Usage
 

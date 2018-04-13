@@ -37,7 +37,7 @@ describe('graphi', () => {
   it('will handle graphql GET requests with promise resolver', async () => {
     const schema = `
       type Person {
-        firstname: String!
+        firstname: String! @Joi(min: 1)
         lastname: String!
       }
 
@@ -1035,7 +1035,7 @@ describe('graphi', () => {
     const plugins = [
       { plugin: HapiAuthBearerToken, options: {}},
       { plugin: internals.authTokenStrategy, options: {}},
-      { plugin: Graphi, options: { schema, resolvers: {}, graphiAuthStrategy: 'test' } }
+      { plugin: Graphi, options: { schema, graphiAuthStrategy: 'test' } }
     ];
 
     const server = Hapi.server();
@@ -1129,6 +1129,115 @@ describe('makeExecutableSchema()', () => {
 
       type Person implements IPerson {
         firstname: String!
+        lastname: String!
+        email: String!
+        description: People
+        ability: Ability
+        search: SearchResult
+      }
+
+      scalar People
+
+      enum Ability {
+        COOK
+        PROGRAM
+      }
+
+      union SearchResult = Person | String
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        person: () => {}
+      },
+      People: {
+        description: () => {}
+      },
+      Ability: {
+        COOK: () => {}
+      },
+      Person: {
+        ability: () => {},
+        description: () => {},
+        search: () => {}
+      },
+      IPerson: {
+        firstname: () => {}
+      },
+      Someone: {
+        name: () => {}
+      }
+    };
+
+    const executable = Graphi.makeExecutableSchema({ schema, resolvers });
+    expect(executable instanceof Graphi.graphql.GraphQLSchema).to.be.true();
+  });
+
+  it('converts a graphql schema and executes preResolve first', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        person: () => {
+          return { firstname: 'peter', lastname: 'pluck' };
+        }
+      },
+      Person: {
+        firstname: function (root, args, request) {
+          expect(this.fu).to.equal('bar');
+          return root.firstname.toUpperCase();
+        },
+        lastname: function (root, args, request) {
+          expect(this.fu).to.equal('bar');
+          return root.lastname.toUpperCase();
+        }
+      }
+    };
+
+    const preResolve = () => {
+      return { fu: 'bar' };
+    };
+
+    const executable = Graphi.makeExecutableSchema({ schema, resolvers, preResolve });
+    expect(executable instanceof Graphi.graphql.GraphQLSchema).to.be.true();
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema: executable } });
+
+    await server.initialize();
+
+    const payload = { query: 'query { person(firstname: "peter") { firstname lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.firstname).to.equal('PETER');
+    expect(res.result.data.person.lastname).to.equal('PLUCK');
+  });
+
+  it('converts a graphql schema with custom joi directives', () => {
+    const schema = `
+      input Someone {
+        name: String @JoiString(min: 1)
+      }
+
+      interface IPerson {
+        firstname: String
+      }
+
+      type Person implements IPerson {
+        firstname: String! @JoiString(min: 1)
         lastname: String!
         email: String!
         description: People
