@@ -15,6 +15,13 @@ hapi GraphQL server plugin
 
 ## API
 
+The following decorations are made to the hapi server to make it easier to use a single graphi plugin with multiple other plugins depending on it.
+
+- `server.registerSchema({ schema, resolvers })` - similar to the original registration options for the plugin, but this will merge the schema with any prior schema that is already registered with the server. This is useful for combining multiple graphql schemas/resolvers together into a single server.
+- `server.makeExecutableSchema({ schema, resolvers, preResolve })` - combine resolvers with the schema definition into a `GraphQLSchema`.
+
+
+The follow properties are exported directly when you `require('graphi')`
 - `graphql` - exported Graphql module that graphi uses
 - `makeExecutableSchema({ schema, resolvers, preResolve })` - combine resolvers with the schema definition into a `GraphQLSchema`.
 

@@ -37,6 +37,7 @@
     "boom": "7.x.x",
     "graphql": "0.13.x",
     "graphql-server-module-graphiql": "1.3.x",
+    "graphql-tools": "v3.0.0-beta.0",
     "lodash.merge": "4.6.x"
   }
 }
