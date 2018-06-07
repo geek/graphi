@@ -1436,6 +1436,73 @@ describe('server.registerGraph()', () => {
     expect(res2.statusCode).to.equal(200);
     expect(res2.result.data.person.lastname).to.equal('jean');
   });
+
+  it('will merge new query resolvers with formatters', async () => {
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'billy', lastname: 'jean' };
+    };
+
+    const getPeople = function (args, request) {
+      return [{ firstname: 'billy', lastname: 'jean' }];
+    };
+
+    const schema1 = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+        friend: Person
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const schema2 = `
+      type Person {
+        id: ID!
+        firstname: String!
+        lastname: String!
+        friend: Person
+      }
+
+      type Query {
+        people: [Person]
+      }
+    `;
+
+    const resolvers1 = {
+      person: getPerson
+    };
+
+    const resolvers2 = {
+      people: getPeople,
+      Person: {
+        friend: (root, args, request) => {
+          return root;
+        }
+      }
+    };
+
+    const server = Hapi.server({ debug: { request: ['error'] } });
+    await server.register({ plugin: Graphi });
+    server.registerSchema({ schema: schema1, resolvers: resolvers1 });
+    server.registerSchema({ schema: schema2, resolvers: resolvers2 });
+    await server.initialize();
+
+    const payload1 = { query: 'query { people { lastname } }' };
+    const res1 = await server.inject({ method: 'POST', url: '/graphql', payload: payload1 });
+    expect(res1.statusCode).to.equal(200);
+    expect(res1.result.data.people[0].lastname).to.equal('jean');
+
+    const payload2 = { query: 'query { person(firstname: "billy") { lastname friend { firstname } } }' };
+    const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
+    expect(res2.statusCode).to.equal(200);
+    expect(res2.result.data.person.lastname).to.equal('jean');
+  });
 });
 
 // auth token strategy plugin
