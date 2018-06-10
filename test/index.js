@@ -263,12 +263,15 @@ describe('graphi', () => {
     await server.register({ plugin: Graphi, options: { schema, resolvers } });
 
     server.route({
-      method: 'graphql',
+      method: 'POST',
       path: '/createPerson',
-      handler: (request, h) => {
-        expect(request.payload.firstname).to.equal('billy');
-        expect(request.payload.lastname).to.equal('jean');
-        return { firstname: 'billy', lastname: 'jean' };
+      config: {
+        tags: ['graphql'],
+        handler: (request, h) => {
+          expect(request.payload.firstname).to.equal('billy');
+          expect(request.payload.lastname).to.equal('jean');
+          return { firstname: 'billy', lastname: 'jean' };
+        }
       }
     });
 
@@ -1116,141 +1119,7 @@ describe('graphi', () => {
   });
 });
 
-describe('makeExecutableSchema()', () => {
-  it('converts a graphql schema into executable graphql objects', () => {
-    const schema = `
-      input Someone {
-        name: String
-      }
-
-      interface IPerson {
-        firstname: String
-      }
-
-      type Person implements IPerson {
-        firstname: String!
-        lastname: String!
-        email: String!
-        description: People
-        ability: Ability
-        search: SearchResult
-      }
-
-      scalar People
-
-      enum Ability {
-        COOK
-        PROGRAM
-      }
-
-      union SearchResult = Person | String
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    const resolvers = {
-      Query: {
-        person: () => {}
-      },
-      People: {
-        description: () => {}
-      },
-      Ability: {
-        COOK: () => {}
-      },
-      Person: {
-        ability: () => {},
-        description: () => {},
-        search: () => {}
-      },
-      IPerson: {
-        firstname: () => {}
-      },
-      Someone: {
-        name: () => {}
-      }
-    };
-
-    const executable = Graphi.makeExecutableSchema({ schema, resolvers });
-    expect(executable instanceof Graphi.graphql.GraphQLSchema).to.be.true();
-  });
-
-  it('converts a graphql schema and executes preResolve first', async () => {
-    const schema = `
-      type Person {
-        firstname: String!
-        lastname: String!
-      }
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    const resolvers = {
-      Query: {
-        person: () => {
-          return { firstname: 'peter', lastname: 'pluck' };
-        }
-      },
-      Person: {
-        firstname: function (root, args, request) {
-          expect(this.fu).to.equal('bar');
-          return root.firstname.toUpperCase();
-        },
-        lastname: function (root, args, request) {
-          expect(this.fu).to.equal('bar');
-          return root.lastname.toUpperCase();
-        }
-      }
-    };
-
-    const preResolve = () => {
-      return { fu: 'bar' };
-    };
-
-    const executable = Graphi.makeExecutableSchema({ schema, resolvers, preResolve });
-    expect(executable instanceof Graphi.graphql.GraphQLSchema).to.be.true();
-
-    const server = Hapi.server();
-    await server.register({ plugin: Graphi, options: { schema: executable } });
-
-    await server.initialize();
-
-    const payload = { query: 'query { person(firstname: "peter") { firstname lastname } }' };
-    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
-    expect(res.statusCode).to.equal(200);
-    expect(res.result.data.person.firstname).to.equal('PETER');
-    expect(res.result.data.person.lastname).to.equal('PLUCK');
-  });
-
-  it('errors when resolver missing from schema', () => {
-    const schema = `
-      type Person {
-        firstname: String!
-        lastname: String!
-        email: String!
-      }
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    let err;
-    try {
-      Graphi.makeExecutableSchema({ schema, resolvers: { Query: { human: () => {} } } });
-    } catch (ex) {
-      err = ex;
-    }
-
-    expect(err).to.be.error();
-  });
-});
-
-describe('server.registerGraph()', () => {
+describe('server.registerSchema()', () => {
   it('will merge multiple schemas together', async () => {
     const getPerson = function (args, request) {
       expect(args.firstname).to.equal('billy');

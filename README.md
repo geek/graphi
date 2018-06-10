@@ -1,5 +1,5 @@
 # graphi
-hapi GraphQL server plugin
+hapi GraphQL server plugin with Joi scalars
 
 [![Build Status](https://secure.travis-ci.org/geek/graphi.svg)](http://travis-ci.org/geek/graphi)
 
@@ -30,7 +30,7 @@ The follow properties are exported directly when you `require('graphi')`
 ```javascript
 const schema = `
   type Person {
-    firstname: String!
+    firstname: String! @JoiString(min 4)
     lastname: String!
   }
 
@@ -78,7 +78,7 @@ await server.register({ plugin: Graphi, options: { schema } });
 
 ### With hapi routes
 
-You can also define resolvers as hapi routes. As a result, each resolver is able to benefit from route caching, custom auth strategies, and all of the other powerful hapi routing features. Each route should use the custom method `'graphql'` and the path should be the key name for the resolver prefixed with `/`. You can also mix and match existing resolvers with routes.
+You can also define resolvers as hapi routes. As a result, each resolver is able to benefit from route caching, custom auth strategies, and all of the other powerful hapi routing features. Each route should either use the custom method `'graphql'` or it should add a tag named `'graphql'` and the path should be the key name for the resolver prefixed with `/`. You can also mix and match existing resolvers with routes.
 
 ```javascript
 const schema = `
@@ -105,3 +105,39 @@ server.route({
 
 await server.register({ plugin: Graphi, options: { schema } });
 ```
+
+This enables existing RESTful APIs to be easily converted over to GraphQL resolvers:
+
+```javascript
+server.route({
+  method: 'POST',
+  path: '/person',
+  config: {
+    tags: ['graphql'],
+    handler: (request, h) => {
+      // request.payload contains any arguments sent to the query
+      return { firstname: 'billy', lastname: 'jean' };
+    }
+  }
+});
+```
+
+## Joi scalar support
+
+Any schema that is expressed with JoiType directives is converted to valid scalars. As a result, using graphi you are able to create more expressive GraphQL schema definitions. For example, if you want to allow the creation of a well formed user the schema can look like the following, resulting in validated input fields before the fields are passed to any resolvers.
+
+```
+type Mutation {
+  createUser(name: String @JoiString(min 2), email: String @JoiString(email: true, max: 128))
+}
+```
+
+Additionally, you can also use the Joi scalars to perform extra preprosessing or postprocessing on you data. For example, the following schema will result in `firstname` being uppercased on the response.
+
+```
+type Person {
+  firstname: String @JoiString(uppercase: true)
+}
+```
+
+
