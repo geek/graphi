@@ -84,7 +84,7 @@ describe('graphi', () => {
       })
     });
 
-    const server = Hapi.server();
+    const server = Hapi.server({ debug: { request: ['error'] }});
     await server.register({ plugin: Graphi, options: { schema } });
     await server.initialize();
 
