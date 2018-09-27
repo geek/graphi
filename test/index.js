@@ -5,7 +5,9 @@ const GraphQL = require('graphql');
 const Hapi = require('hapi');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Lab = require('lab');
+const { MockTracer } = require('opentracing');
 const Scalars = require('scalars');
+const Traci = require('traci');
 const Wreck = require('wreck');
 const Graphi = require('../');
 
@@ -125,6 +127,201 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
+  });
+
+  it('will log tracing information when traci is registered', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Traci, options: { tracer: new MockTracer() } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.lastname).to.equal('jean');
+    const report = server.tracer.report();
+    const span = report.debugSpans.find((span) => {
+      return span.operation === 'graphql_request';
+    });
+    expect(span).to.exist();
+  });
+
+  it('will log to a tracer with error information for invalid query', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean', email: 'what' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Traci, options: { tracer: new MockTracer() } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const payload = { query: 'query { person(firstname: "billy) { lastname, email } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(400);
+    expect(res.payload).to.contain('Unterminated string');
+    const report = server.tracer.report();
+    const span = report.spans.find((span) => {
+      return span._operationName === 'graphql_request';
+    });
+    expect(span).to.exist();
+    expect(span._logs[1].fields.event).to.equal('error');
+  });
+
+  it('will log error details to a tracer when request has invalid variables', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      return Promise.resolve({ firstname: 'tom', lastname: 'arnold' });
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Traci, options: { tracer: new MockTracer() } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=invalid';
+    const res = await server.inject({ method: 'GET', url });
+    expect(res.statusCode).to.equal(400);
+    const report = server.tracer.report();
+    const span = report.spans.find((span) => {
+      return span._operationName === 'graphql_request';
+    });
+    expect(span).to.exist();
+    expect(span._logs[1].fields.event).to.equal('error');
+  });
+
+  it('will log to a tracer when there are unknown directives', async () => {
+    const schema = `
+      type Person {
+        firstname: String! @limit(min: 1)
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('billy');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: '', lastname: 'jean' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Traci, options: { tracer: new MockTracer() } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const payload = { query: 'query { person(firstname: "billy") { lastname @foo(min: 2) } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(400);
+    expect(res.result.message).to.contain('Unknown directive');
+    const report = server.tracer.report();
+    const span = report.spans.find((span) => {
+      return span._operationName === 'graphql_request';
+    });
+    expect(span).to.exist();
+    expect(span._logs[1].fields.event).to.equal('error');
+  });
+
+  it('logs to a tracer any errors from a resolver', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      return Promise.reject(new Error('my custom error'));
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Traci, options: { tracer: new MockTracer() } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D';
+    const res = await server.inject({ method: 'GET', url });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.errors).to.exist();
+    const report = server.tracer.report();
+    const span = report.spans.find((span) => {
+      return span._operationName === 'graphql_request';
+    });
+    expect(span).to.exist();
+    expect(span._logs[1].fields.event).to.equal('error');
   });
 
   it('will provide a friendly error when the graphql query is incorrect', async () => {
@@ -938,7 +1135,6 @@ describe('graphi', () => {
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
   });
-
 
   it('requests fails without valid auth token', async () => {
     const schema = `
