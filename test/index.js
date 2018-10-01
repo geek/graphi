@@ -1,10 +1,12 @@
 'use strict';
 
+const Barrier = require('cb-barrier');
 const Code = require('code');
 const GraphQL = require('graphql');
 const Hapi = require('hapi');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Lab = require('lab');
+const Nes = require('nes');
 const { MockTracer } = require('opentracing');
 const Scalars = require('scalars');
 const Traci = require('traci');
@@ -127,6 +129,199 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'POST', url: '/graphql', payload });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
+  });
+
+  it('will handle graphql subscription from nes client', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated: Person!
+      }
+    `;
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema } });
+    await server.start();
+
+    const barrier = new Barrier();
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    await client.subscribe('/personCreated', ({ firstname }) => {
+      expect(firstname).to.equal('foo');
+      client.disconnect();
+      barrier.pass();
+    });
+
+    server.publish('/personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+
+    await barrier;
+    await server.stop();
+  });
+
+  it('will handle graphql subscription graphi.publish with arguments', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated(firstname: String): Person!
+      }
+    `;
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema } });
+    await server.start();
+
+    const barrier = new Barrier();
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    await client.subscribe('/personCreated/john', ({ firstname }) => {
+      expect(firstname).to.equal('john');
+      client.disconnect();
+      barrier.pass();
+    });
+
+    server.plugins.graphi.publish('personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+    server.plugins.graphi.publish('personCreated', { firstname: 'john', lastname: 'smith', email: 'test@test.com' });
+
+    await barrier;
+    await server.stop();
+  });
+
+  it('will handle graphql subscription graphi.publish without arguments', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated: Person!
+      }
+    `;
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema } });
+    await server.start();
+
+    const barrier = new Barrier();
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    await client.subscribe('/personCreated', ({ firstname }) => {
+      expect(firstname).to.equal('foo');
+      client.disconnect();
+      barrier.pass();
+    });
+
+    server.plugins.graphi.publish('personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+
+    await barrier;
+    await server.stop();
+  });
+
+  it('will handle graphql subscription with arguments published through graphi', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated(firstname: String): Person!
+      }
+    `;
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema } });
+    await server.start();
+
+    const barrier = new Barrier();
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    await client.subscribe('/personCreated/john', ({ firstname, lastname }) => {
+      expect(firstname).to.equal('john');
+      expect(lastname).to.equal('smith');
+      client.disconnect();
+      barrier.pass();
+    });
+
+    server.plugins.graphi.publish('personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+    server.plugins.graphi.publish('personCreated', { firstname: 'john', lastname: 'smith', email: 'test@test.com' });
+
+    await barrier;
+    await server.stop();
+  });
+
+  it('will throw for subscription schemas when nes isn\'t registered', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated: Person!
+      }
+    `;
+
+    const server = Hapi.server();
+    await expect(server.register({ plugin: Graphi, options: { schema } })).to.reject(Error);
+  });
+
+  it('will handle graphql queries over websockets', async () => {
+    const schema = `
+      type Person {
+        firstname: String! @Joi(min: 1)
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'tom', lastname: 'arnold' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.start();
+
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    const payload = { query: 'query { person(firstname: "tom") { lastname } }' };
+    const result = await client.request({ method: 'POST', path: '/graphql', payload });
+    await server.stop();
+
+    expect(result.payload.data.person.lastname).to.equal('arnold');
   });
 
   it('will log tracing information when traci is registered', async () => {
