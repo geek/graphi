@@ -125,7 +125,7 @@ server.route({
 
 ### With Subscriptions
 
-Graphi leverages [nes](https://github.com/hapijs/nes) to manage GraphQL subscriptions. Therefore, if you do intend to use subscriptions you will need to register nes with the hapi server. On the server a schema that containers subscriptions will automatically have those subscriptions registered with nes and graphi will expose helper functions to make publishing to subscribers easier. There is a `server.plugins.graphi.publish(message, object)` helper to make this easier to publish to any potential subscribers. Below is a complete example of registering a schema and then publishing to it.
+Graphi leverages [nes](https://github.com/hapijs/nes) to manage GraphQL subscriptions. Therefore, if you do intend to use subscriptions you will need to register nes with the hapi server. On the server a schema that contains subscriptions will automatically have those subscriptions registered with nes and graphi will expose helper functions to make publishing to subscribers easier. There is a `server.plugins.graphi.publish(message, object)` helper to make this easier to publish to any potential subscribers. Below is a complete example of registering a schema and then publishing to it.
 
 ```js
 const schema = `
@@ -145,12 +145,12 @@ await server.register(Nes);
 await server.register({ plugin: Graphi, options: { schema } });
 await server.start();
 
-server.plugins.graphi.publish('personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+server.plugins.graphi.publish('personCreated', { firstname: 'Peter', lastname: 'Pluck', email: 'test@test.com' });
 ```
 
-Any clients that are subscribed to the `personCreated` event for the person with `firstname = 'foo'` will receive the message that was published.
+Any clients that are subscribed to the `personCreated` event for the person with `firstname = 'Peter'` will receive the message that was published.
 
-At the moment clients are required to use a nes compatible library and to subscribe to events using the `client.subscribe` function. The path that clients should use depends on the message, but in the previous example this would be `'/personCreated/foo'`.
+At the moment clients are required to use a nes compatible library and to subscribe to events using the `client.subscribe` function. The path that clients should use depends on the message, but in the previous example this would be `'/personCreated/peter'`.
 
 ## Joi scalar support
 

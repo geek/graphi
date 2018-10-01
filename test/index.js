@@ -284,14 +284,7 @@ describe('graphi', () => {
     `;
 
     const server = Hapi.server();
-    let err;
-    try {
-      await server.register({ plugin: Graphi, options: { schema } });
-      await server.initialize();
-    } catch (ex) {
-      err = ex;
-    }
-    expect(err).to.be.an.error();
+    await expect(server.register({ plugin: Graphi, options: { schema } })).to.reject(Error);
   });
 
   it('will handle graphql queries over websockets', async () => {
