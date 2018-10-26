@@ -88,7 +88,7 @@ describe('graphi', () => {
       })
     });
 
-    const server = Hapi.server({ debug: { request: ['error'] }});
+    const server = Hapi.server({ debug: { request: ['error'] } });
     await server.register({ plugin: Graphi, options: { schema } });
     await server.initialize();
 
@@ -1273,8 +1273,8 @@ describe('graphi', () => {
     };
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, resolvers, authStrategy: false } }
     ];
 
@@ -1314,8 +1314,8 @@ describe('graphi', () => {
     };
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, resolvers } }
     ];
 
@@ -1355,8 +1355,8 @@ describe('graphi', () => {
     };
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, resolvers, authStrategy: 'test' } }
     ];
 
@@ -1396,8 +1396,8 @@ describe('graphi', () => {
     };
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, resolvers, authStrategy: 'test' } }
     ];
 
@@ -1427,8 +1427,8 @@ describe('graphi', () => {
     `;
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, graphiAuthStrategy: 'test' } }
     ];
 
@@ -1460,8 +1460,8 @@ describe('graphi', () => {
     `;
 
     const plugins = [
-      { plugin: HapiAuthBearerToken, options: {}},
-      { plugin: internals.authTokenStrategy, options: {}},
+      { plugin: HapiAuthBearerToken, options: {} },
+      { plugin: internals.authTokenStrategy, options: {} },
       { plugin: Graphi, options: { schema, authStrategy: false } }
     ];
 
