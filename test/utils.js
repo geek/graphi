@@ -101,7 +101,7 @@ describe('makeExecutableSchema()', () => {
     const executable = Utils.makeExecutableSchema({ schema, resolvers });
     expect(executable instanceof GraphQL.GraphQLSchema).to.be.true();
 
-    const server = Hapi.server({ debug: { request: ['error'] }});
+    const server = Hapi.server({ debug: { request: ['error'] } });
     await server.register({ plugin: Graphi, options: { schema: executable } });
 
     await server.initialize();
@@ -139,7 +139,7 @@ describe('makeExecutableSchema()', () => {
     const executable = Utils.makeExecutableSchema({ schema, resolvers });
     expect(executable instanceof GraphQL.GraphQLSchema).to.be.true();
 
-    const server = Hapi.server({ debug: { request: ['error'] }});
+    const server = Hapi.server({ debug: { request: ['error'] } });
     await server.register({ plugin: Graphi, options: { schema: executable } });
 
     await server.initialize();
@@ -175,7 +175,7 @@ describe('makeExecutableSchema()', () => {
     const executable = Utils.makeExecutableSchema({ schema, resolvers });
     expect(executable instanceof GraphQL.GraphQLSchema).to.be.true();
 
-    const server = Hapi.server({ debug: { request: ['error'] }});
+    const server = Hapi.server({ debug: { request: ['error'] } });
     await server.register({ plugin: Graphi, options: { schema: executable } });
 
     await server.initialize();
