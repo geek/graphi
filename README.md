@@ -12,7 +12,7 @@ hapi GraphQL server plugin
 - `resolvers` - query and mutation functions mapped to their respective keys. Resolvers should return a promise when performing asynchronous operations.
 - `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
 - `graphiAuthStrategy` - (optional) Authentication strategy to apply to `/graphiql` route.  Default is `false`.
-- `formatError` - (optional) Function that receives a [GraphQLError](https://github.com/graphql/graphql-js/blob/271e23e13ec093e7ffb844e7ffaf340ab92f053e/src/error/GraphQLError.js) argument and returns a formatted error.
+- `formatError` - (optional) Function that receives a [GraphQLError](https://github.com/graphql/graphql-js/blob/271e23e13ec093e7ffb844e7ffaf340ab92f053e/src/error/GraphQLError.js) as its only argument and returns a custom error object, which is returned to the client.
 
 ## API
 
