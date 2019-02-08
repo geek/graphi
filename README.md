@@ -1,5 +1,5 @@
 # graphi
-hapi GraphQL server plugin with Joi scalars
+hapi GraphQL server plugin
 
 [![Build Status](https://secure.travis-ci.org/geek/graphi.svg)](http://travis-ci.org/geek/graphi)
 
@@ -12,6 +12,7 @@ hapi GraphQL server plugin with Joi scalars
 - `resolvers` - query and mutation functions mapped to their respective keys. Resolvers should return a promise when performing asynchronous operations.
 - `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
 - `graphiAuthStrategy` - (optional) Authentication strategy to apply to `/graphiql` route.  Default is `false`.
+- `formatError` - (optional) Function that receives a [GraphQLError](https://github.com/graphql/graphql-js/blob/271e23e13ec093e7ffb844e7ffaf340ab92f053e/src/error/GraphQLError.js) as its only argument and returns a custom error object, which is returned to the client.
 
 ## API
 
@@ -31,7 +32,7 @@ The follow properties are exported directly when you `require('graphi')`
 ```javascript
 const schema = `
   type Person {
-    firstname: String! @JoiString(min 4)
+    firstname: String!
     lastname: String!
   }
 
@@ -62,7 +63,7 @@ const schema = new GraphQLSchema({
       person: {
         type: GraphQLString,
         args: {
-          firstname: { type: new Scalars.JoiString({ min: [2, 'utf8'], max: 10 }) }
+          firstname: { type: GraphQLString }
         },
         resolve: (root, { firstname }, request) => {
           return firstname;
@@ -151,23 +152,3 @@ server.plugins.graphi.publish('personCreated', { firstname: 'Peter', lastname: '
 Any clients that are subscribed to the `personCreated` event for the person with `firstname = 'Peter'` will receive the message that was published.
 
 At the moment clients are required to use a nes compatible library and to subscribe to events using the `client.subscribe` function. The path that clients should use depends on the message, but in the previous example this would be `'/personCreated/peter'`.
-
-## Joi scalar support
-
-Any schema that is expressed with JoiType directives is converted to valid scalars. As a result, using graphi you are able to create more expressive GraphQL schema definitions. For example, if you want to allow the creation of a well formed user the schema can look like the following, resulting in validated input fields before the fields are passed to any resolvers.
-
-```
-type Mutation {
-  createUser(name: String @JoiString(min 2), email: String @JoiString(email: true, max: 128))
-}
-```
-
-Additionally, you can also use the Joi scalars to perform extra preprosessing or postprocessing on you data. For example, the following schema will result in `firstname` being uppercased on the response.
-
-```
-type Person {
-  firstname: String @JoiString(uppercase: true)
-}
-```
-
-

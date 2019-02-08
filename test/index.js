@@ -8,7 +8,6 @@ const HapiAuthBearerToken = require('hapi-auth-bearer-token');
 const Lab = require('lab');
 const Nes = require('nes');
 const { MockTracer } = require('opentracing');
-const Scalars = require('scalars');
 const Traci = require('traci');
 const Wreck = require('wreck');
 const Graphi = require('../');
@@ -16,7 +15,6 @@ const Graphi = require('../');
 
 // Test shortcuts
 
-const { GraphQLObjectType, GraphQLSchema, GraphQLString } = GraphQL;
 const lab = exports.lab = Lab.script();
 const describe = lab.describe;
 const it = lab.it;
@@ -68,34 +66,6 @@ describe('graphi', () => {
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('arnold');
-  });
-
-  it('will handle graphql GET requests GraphQL instance schema', async () => {
-    const schema = new GraphQLSchema({
-      query: new GraphQLObjectType({
-        name: 'RootQueryType',
-        fields: {
-          person: {
-            type: GraphQLString,
-            args: {
-              firstname: { type: new Scalars.JoiString({ min: [2, 'utf8'], max: 10 }) }
-            },
-            resolve: (root, { firstname }, request) => {
-              return firstname;
-            }
-          }
-        }
-      })
-    });
-
-    const server = Hapi.server({ debug: { request: ['error'] } });
-    await server.register({ plugin: Graphi, options: { schema } });
-    await server.initialize();
-
-    const url = '/graphql?query=' + encodeURIComponent('{ person(firstname: "tom")}');
-    const res = await server.inject({ method: 'GET', url });
-    expect(res.statusCode).to.equal(200);
-    expect(res.result.data.person).to.equal('tom');
   });
 
   it('will handle graphql POST requests with query', async () => {
@@ -560,7 +530,7 @@ describe('graphi', () => {
           person: {
             type: GraphQL.GraphQLString,
             args: { firstname: { type: GraphQL.GraphQLString } },
-            resolve: (root, args) => {
+            resolve: (rootValue, args) => {
               expect(args.firstname).to.equal('billy');
               return 'jean';
             }
@@ -916,6 +886,47 @@ describe('graphi', () => {
     const url = '/graphql?query={}';
     const res = await server.inject({ method: 'GET', url });
     expect(res.statusCode).to.equal(400);
+  });
+
+  it('allows errors to be formatted', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person: Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      const error = new Error('my silly error');
+      error.id = 'my id';
+      throw error;
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const formatError = function (error) {
+      expect(error.originalError.message).to.equal('my silly error');
+      expect(error.originalError.id).to.equal('my id');
+      error.originalError.custom = 'field';
+      return error.originalError;
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers, formatError } });
+    await server.initialize();
+
+    const payload = { query: 'query { person { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.errors[0].message).to.equal('my silly error');
+    expect(res.result.errors[0].id).to.equal('my id');
+    expect(res.result.errors[0].custom).to.equal('field');
   });
 
   it('will log result with errors property', async () => {
@@ -1741,8 +1752,8 @@ describe('server.registerSchema()', () => {
     const resolvers2 = {
       people: getPeople,
       Person: {
-        friend: (root, args, request) => {
-          return root;
+        friend: (rootValue, args, request) => {
+          return rootValue;
         }
       }
     };
