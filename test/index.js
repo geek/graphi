@@ -888,6 +888,47 @@ describe('graphi', () => {
     expect(res.statusCode).to.equal(400);
   });
 
+  it('allows errors to be formatted', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person: Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      const error = new Error('my silly error');
+      error.id = 'my id';
+      throw error;
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const formatError = function (error) {
+      expect(error.originalError.message).to.equal('my silly error');
+      expect(error.originalError.id).to.equal('my id');
+      error.originalError.custom = 'field';
+      return error.originalError;
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers, formatError } });
+    await server.initialize();
+
+    const payload = { query: 'query { person { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.errors[0].message).to.equal('my silly error');
+    expect(res.result.errors[0].id).to.equal('my id');
+    expect(res.result.errors[0].custom).to.equal('field');
+  });
+
   it('will log result with errors property', async () => {
     const schema = `
       type Person {
