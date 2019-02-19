@@ -31,7 +31,7 @@ internals.init = async () => {
   try {
     const server = new Hapi.Server({ port: 8000 });
 
-    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.register({ plugin: Graphi, options: { schema, resolvers, tracing: true } });
 
     await server.start();
 
