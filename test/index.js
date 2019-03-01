@@ -1774,6 +1774,53 @@ describe('server.registerSchema()', () => {
     expect(res2.statusCode).to.equal(200);
     expect(res2.result.data.person.lastname).to.equal('jean');
   });
+
+  describe('tracing', () => {
+    it('when enabled will track timing information', async () => {
+      const schema = `
+        type Person {
+          firstname: String!
+          lastname: String!
+          email: String!
+        }
+
+        type Query {
+          person(firstname: String!): Person!
+        }
+      `;
+
+      const getPerson = function (args, request) {
+        expect(args.firstname).to.equal('billy');
+        expect(request.path).to.equal('/graphql');
+        return { firstname: '', lastname: 'jean', email: 'what' };
+      };
+
+      const resolvers = {
+        person: getPerson
+      };
+
+      const server = Hapi.server();
+      await server.register({ plugin: Graphi, options: { schema, resolvers, tracing: true } });
+      await server.initialize();
+
+      let output = '';
+      const originalStdout = process.stdout.write;
+      process.stdout.write = (data) => {
+        output += data.toString();
+      };
+
+      const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+      const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+      process.stdout.write = originalStdout;
+
+      expect(output).to.include('Duration');
+      expect(output).to.include('person - email');
+      expect(output).to.include('person - lastname');
+      expect(output).to.include('Query');
+      expect(res.statusCode).to.equal(200);
+      expect(res.result.data.person.lastname).to.equal('jean');
+    });
+  });
 });
 
 // auth token strategy plugin
