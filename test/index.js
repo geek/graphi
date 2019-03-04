@@ -1854,13 +1854,29 @@ describe('server.registerSchema()', () => {
       await server.register({ plugin: Graphi, options: { schema, resolvers, tracing: true } });
       await server.initialize();
 
-      const res = await server.inject({ method: 'GET', url: '/graphiql' });
+      const payload = { query: 'query { person(firstname: "billy") { lastname, email } }' };
+      const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+      process.stdout.write = originalStdout;
+
+      expect(output).to.include('Duration');
+      expect(output).to.include('person - email');
+      expect(output).to.include('person - lastname');
+      expect(output).to.include('Query');
+      expect(res.statusCode).to.equal(200);
+      expect(res.result.data.person.lastname).to.equal('jean');
+
+      // Clear "the terminal"
+      output = '';
+
+      // When /graphiql is requested, it POST to the server a query requesting the "IntrospectionQuery"
+      const payload2 = { query: '{ __schema { queryType { name } } }' };
+      const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
       process.stdout.write = originalStdout;
 
       expect(output).to.not.include('Duration');
       expect(output).to.not.include('person - email');
       expect(output).to.not.include('Query');
-      expect(res.statusCode).to.equal(200);
+      expect(res2.statusCode).to.equal(200);
     });
   });
 });
