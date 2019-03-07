@@ -18,7 +18,7 @@ hapi GraphQL server plugin
 
 The following decorations are made to the hapi server to make it easier to use a single graphi plugin with multiple other plugins depending on it.
 
-- `server.registerSchema({ schema, resolvers })` - similar to the original registration options for the plugin, but this will merge the schema with any prior schema that is already registered with the server. This is useful for combining multiple graphql schemas/resolvers together into a single server.
+- `server.registerSchema({ schema, resolvers })` - overwrites an existing registered schema with a new one.
 - `server.makeExecutableSchema({ schema, resolvers, preResolve })` - combine resolvers with the schema definition into a `GraphQLSchema`.
 - `server.plugins.graphi.publish(message, object)` - Publish a message to any subscribers where `message` is the name of the message and `object` is the contents of the message.
 

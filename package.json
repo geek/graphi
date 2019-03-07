@@ -40,7 +40,6 @@
     "boom": "7.x.x",
     "graphql": "14.1.x",
     "apollo-server-module-graphiql": "1.4.x",
-    "graphql-tools": "4.0.x",
     "lodash.merge": "4.6.x"
   }
 }

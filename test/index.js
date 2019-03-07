@@ -1522,7 +1522,7 @@ describe('graphi', () => {
 });
 
 describe('server.registerSchema()', () => {
-  it('will merge multiple schemas together', async () => {
+  it('will overwrite an existing schema', async () => {
     const getPerson = function (args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
@@ -1573,7 +1573,7 @@ describe('server.registerSchema()', () => {
       createPerson
     };
 
-    const server = Hapi.server({ debug: { request: ['error'] } });
+    const server = Hapi.server();
     await server.register({ plugin: Graphi, options: { schema: schema1, resolvers: resolvers1 } });
     server.registerSchema({ schema: schema2, resolvers: resolvers2 });
     await server.initialize();
@@ -1585,34 +1585,15 @@ describe('server.registerSchema()', () => {
 
     const payload2 = { query: 'query { person(firstname: "billy") { lastname } }' };
     const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
-    expect(res2.statusCode).to.equal(200);
-    expect(res2.result.data.person.lastname).to.equal('jean');
+    expect(res2.statusCode).to.equal(400);
   });
 
-  it('will merge new query resolvers', async () => {
-    const getPerson = function (args, request) {
-      expect(args.firstname).to.equal('billy');
-      expect(request.path).to.equal('/graphql');
-      return { firstname: 'billy', lastname: 'jean' };
-    };
-
+  it('will register a new schema', async () => {
     const getPeople = function (args, request) {
       return [{ firstname: 'billy', lastname: 'jean' }];
     };
 
-    const schema1 = `
-      type Person {
-        id: ID!
-        firstname: String!
-        lastname: String!
-      }
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    const schema2 = `
+    const schema = `
       type Person {
         id: ID!
         firstname: String!
@@ -1624,155 +1605,19 @@ describe('server.registerSchema()', () => {
       }
     `;
 
-    const resolvers1 = {
-      person: getPerson
-    };
-
-    const resolvers2 = {
-      people: getPeople
-    };
-
-    const server = Hapi.server({ debug: { request: ['error'] } });
-    await server.register({ plugin: Graphi, options: { schema: schema1, resolvers: resolvers1 } });
-    server.registerSchema({ schema: schema2, resolvers: resolvers2 });
-    await server.initialize();
-
-    const payload1 = { query: 'query { people { lastname } }' };
-    const res1 = await server.inject({ method: 'POST', url: '/graphql', payload: payload1 });
-    expect(res1.statusCode).to.equal(200);
-    expect(res1.result.data.people[0].lastname).to.equal('jean');
-
-    const payload2 = { query: 'query { person(firstname: "billy") { lastname } }' };
-    const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
-    expect(res2.statusCode).to.equal(200);
-    expect(res2.result.data.person.lastname).to.equal('jean');
-  });
-
-  it('will merge new query resolvers when neither was registered with the plugin', async () => {
-    const getPerson = function (args, request) {
-      expect(args.firstname).to.equal('billy');
-      expect(request.path).to.equal('/graphql');
-      return { firstname: 'billy', lastname: 'jean' };
-    };
-
-    const getPeople = function (args, request) {
-      return [{ firstname: 'billy', lastname: 'jean' }];
-    };
-
-    const schema1 = `
-      type Person {
-        id: ID!
-        firstname: String!
-        lastname: String!
-      }
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    const schema2 = `
-      type Person {
-        id: ID!
-        firstname: String!
-        lastname: String!
-      }
-
-      type Query {
-        people: [Person]
-      }
-    `;
-
-    const resolvers1 = {
-      person: getPerson
-    };
-
-    const resolvers2 = {
+    const resolvers = {
       people: getPeople
     };
 
     const server = Hapi.server({ debug: { request: ['error'] } });
     await server.register({ plugin: Graphi });
-    server.registerSchema({ schema: schema1, resolvers: resolvers1 });
-    server.registerSchema({ schema: schema2, resolvers: resolvers2 });
+    server.registerSchema({ schema: schema, resolvers: resolvers });
     await server.initialize();
 
-    const payload1 = { query: 'query { people { lastname } }' };
-    const res1 = await server.inject({ method: 'POST', url: '/graphql', payload: payload1 });
-    expect(res1.statusCode).to.equal(200);
-    expect(res1.result.data.people[0].lastname).to.equal('jean');
-
-    const payload2 = { query: 'query { person(firstname: "billy") { lastname } }' };
-    const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
-    expect(res2.statusCode).to.equal(200);
-    expect(res2.result.data.person.lastname).to.equal('jean');
-  });
-
-  it('will merge new query resolvers with formatters', async () => {
-    const getPerson = function (args, request) {
-      expect(args.firstname).to.equal('billy');
-      expect(request.path).to.equal('/graphql');
-      return { firstname: 'billy', lastname: 'jean' };
-    };
-
-    const getPeople = function (args, request) {
-      return [{ firstname: 'billy', lastname: 'jean' }];
-    };
-
-    const schema1 = `
-      type Person {
-        id: ID!
-        firstname: String!
-        lastname: String!
-        friend: Person
-      }
-
-      type Query {
-        person(firstname: String!): Person!
-      }
-    `;
-
-    const schema2 = `
-      type Person {
-        id: ID!
-        firstname: String!
-        lastname: String!
-        friend: Person
-      }
-
-      type Query {
-        people: [Person]
-      }
-    `;
-
-    const resolvers1 = {
-      person: getPerson
-    };
-
-    const resolvers2 = {
-      people: getPeople,
-      Person: {
-        friend: (rootValue, args, request) => {
-          return rootValue;
-        }
-      }
-    };
-
-    const server = Hapi.server({ debug: { request: ['error'] } });
-    await server.register({ plugin: Graphi });
-    server.registerSchema({ schema: schema1, resolvers: resolvers1 });
-    server.registerSchema({ schema: schema2, resolvers: resolvers2 });
-    await server.initialize();
-
-    const payload1 = { query: 'query { people { lastname } }' };
-    const res1 = await server.inject({ method: 'POST', url: '/graphql', payload: payload1 });
-    expect(res1.statusCode).to.equal(200);
-    expect(res1.result.data.people[0].lastname).to.equal('jean');
-
-    const payload2 = { query: 'query { person(firstname: "billy") { lastname friend { firstname } } }' };
-    const res2 = await server.inject({ method: 'POST', url: '/graphql', payload: payload2 });
-    expect(res2.statusCode).to.equal(200);
-    expect(res2.result.data.person.lastname).to.equal('jean');
+    const payload = { query: 'query { people { lastname } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.people[0].lastname).to.equal('jean');
   });
 });
 
