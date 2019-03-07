@@ -68,6 +68,52 @@ describe('graphi', () => {
     expect(res.result.data.person.lastname).to.equal('arnold');
   });
 
+  it('will emit events around resolvers', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+      }
+
+      type Query {
+        person(firstname: String!): Person!
+      }
+    `;
+
+    const getPerson = function (args, request) {
+      expect(args.firstname).to.equal('tom');
+      expect(request.path).to.equal('/graphql');
+      return { firstname: 'tom', lastname: 'arnold' };
+    };
+
+    const resolvers = {
+      person: getPerson
+    };
+
+    const server = Hapi.server();
+    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+    await server.initialize();
+
+    let preEventHandled = false;
+    server.events.once('preFieldResolver', (data) => {
+      preEventHandled = true;
+      expect(data.args.firstname).to.equal('tom');
+    });
+
+    let postEventHandled = false;
+    server.events.once('postFieldResolver', (data) => {
+      postEventHandled = true;
+      expect(data.args.firstname).to.equal('tom');
+    });
+
+    const url = '/graphql?query=%7B%0A%20%20person(firstname%3A%22tom%22)%20%7B%0A%20%20%20%20lastname%0A%20%20%7D%0A%7D&variables=%7B%22hi%22%3A%20true%7D';
+    const res = await server.inject({ method: 'GET', url });
+    expect(preEventHandled).to.be.true();
+    expect(postEventHandled).to.be.true();
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.lastname).to.equal('arnold');
+  });
+
   it('will handle graphql POST requests with query', async () => {
     const schema = `
       type Person {
@@ -327,9 +373,16 @@ describe('graphi', () => {
     expect(res.statusCode).to.equal(200);
     expect(res.result.data.person.lastname).to.equal('jean');
     const report = server.tracer.report();
+
     const span = report.debugSpans.find((span) => {
       return span.operation === 'graphql_request';
     });
+
+    const fieldSpan = report.spans.find((span) => {
+      return span._operationName === 'graphql_resolver';
+    });
+
+    expect(fieldSpan._logs[0].fields.field).to.equal('person');
     expect(span).to.exist();
   });
 

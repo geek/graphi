@@ -27,6 +27,23 @@ The follow properties are exported directly when you `require('graphi')`
 - `graphql` - exported Graphql module that graphi uses
 - `makeExecutableSchema({ schema, resolvers, preResolve })` - combine resolvers with the schema definition into a `GraphQLSchema`.
 
+## Events
+
+The following server events are registered and available on `server.events.on` or `server.events.once`.
+
+- `preFieldResolver` - emitted before executing a resolver function. The event listener function is executed with an object argument that contains the following properties:
+  - `source`
+  - `args`
+  - `contextValue`
+  - `info`
+
+- `postFieldResolver` - emitted after executing a resolver function. The event listener function is executed with an object argument that contains the following properties:
+  - `source`
+  - `args`
+  - `contextValue`
+  - `info`
+  - `result`
+
 ## Usage
 
 ```javascript
