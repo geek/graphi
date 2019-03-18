@@ -13,6 +13,7 @@ hapi GraphQL server plugin
 - `authStrategy` - (optional) Authentication strategy to apply to `/graphql` route.  Default is `false`.
 - `graphiAuthStrategy` - (optional) Authentication strategy to apply to `/graphiql` route.  Default is `false`.
 - `formatError` - (optional) Function that receives a [GraphQLError](https://github.com/graphql/graphql-js/blob/271e23e13ec093e7ffb844e7ffaf340ab92f053e/src/error/GraphQLError.js) as its only argument and returns a custom error object, which is returned to the client.
+- `subscriptionOptions` - (optional) Any options to pass to the [nes subscription function](https://github.com/hapijs/nes/blob/master/API.md#serversubscriptionpath-options).
 
 ## API
 
