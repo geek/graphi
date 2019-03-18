@@ -181,6 +181,48 @@ describe('graphi', () => {
     await server.stop();
   });
 
+  it('will pass subscriptionOptions to nes subscription', async () => {
+    const schema = `
+      type Person {
+        firstname: String!
+        lastname: String!
+        email: String!
+      }
+
+      type Subscription {
+        personCreated: Person!
+      }
+    `;
+
+    let isSubscribed = false;
+    const subscriptionOptions = {
+      onSubscribe: () => {
+        isSubscribed = true;
+      }
+    };
+
+    const server = Hapi.server();
+    await server.register(Nes);
+    await server.register({ plugin: Graphi, options: { schema, subscriptionOptions } });
+    await server.start();
+
+    const barrier = new Barrier();
+    const client = new Nes.Client(`http://localhost:${server.info.port}`);
+    await client.connect();
+
+    await client.subscribe('/personCreated', ({ firstname }) => {
+      expect(firstname).to.equal('foo');
+      client.disconnect();
+      barrier.pass();
+    });
+
+    server.publish('/personCreated', { firstname: 'foo', lastname: 'bar', email: 'test@test.com' });
+
+    await barrier;
+    expect(isSubscribed).to.be.true();
+    await server.stop();
+  });
+
   it('will handle graphql subscription graphi.publish with arguments', async () => {
     const schema = `
       type Person {
