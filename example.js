@@ -1,6 +1,6 @@
 'use strict';
 
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 const Graphi = require('.');
 
 const internals = {};
@@ -28,17 +28,13 @@ const resolvers = {
 
 
 internals.init = async () => {
-  try {
-    const server = new Hapi.Server({ port: 8000 });
+  const server = new Hapi.Server({ port: 8000 });
 
-    await server.register({ plugin: Graphi, options: { schema, resolvers } });
+  await server.register({ plugin: Graphi, options: { schema, resolvers } });
 
-    await server.start();
+  await server.start();
 
-    return server;
-  } catch (err) {
-    throw err;
-  }
+  return server;
 };
 
 internals.init()

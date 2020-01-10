@@ -1,18 +1,16 @@
 'use strict';
 
-const Code = require('code');
+const Code = require('@hapi/code');
 const GraphQL = require('graphql');
-const Hapi = require('hapi');
-const Lab = require('lab');
+const Hapi = require('@hapi/hapi');
+const Lab = require('@hapi/lab');
 const Graphi = require('../');
 const Utils = require('../lib/utils');
 
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.describe;
-const it = lab.it;
+const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 

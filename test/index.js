@@ -1,23 +1,21 @@
 'use strict';
 
 const Barrier = require('cb-barrier');
-const Code = require('code');
+const Code = require('@hapi/code');
 const GraphQL = require('graphql');
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 const HapiAuthBearerToken = require('hapi-auth-bearer-token');
-const Lab = require('lab');
-const Nes = require('nes');
+const Lab = require('@hapi/lab');
+const Nes = require('@hapi/nes');
 const { MockTracer } = require('opentracing');
 const Traci = require('traci');
-const Wreck = require('wreck');
+const Wreck = require('@hapi/wreck');
 const Graphi = require('../');
 
 
 // Test shortcuts
 
-const lab = exports.lab = Lab.script();
-const describe = lab.describe;
-const it = lab.it;
+const { describe, it } = exports.lab = Lab.script();
 const expect = Code.expect;
 
 
@@ -1351,7 +1349,7 @@ describe('graphi', () => {
     await server.initialize();
 
     const res = await server.inject({ method: 'OPTIONS', url: '/graphql' });
-    expect(res.statusCode).to.equal(200);
+    expect(res.statusCode).to.equal(204);
   });
 
 
