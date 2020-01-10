@@ -25,20 +25,20 @@
   },
   "homepage": "https://github.com/geek/graphi#readme",
   "devDependencies": {
-    "belly-button": "5.x.x",
-    "cb-barrier": "1.0.x",
-    "code": "5.x.x",
-    "hapi": "18.x.x",
+    "belly-button": "6.x.x",
+    "cb-barrier": "1.x.x",
+    "@hapi/code": "8.x.x",
+    "@hapi/hapi": "19.x.x",
     "hapi-auth-bearer-token": "6.x.x",
-    "lab": "18.x.x",
-    "nes": "10.0.x",
-    "opentracing": "0.14.3",
-    "traci": "1.4.0",
-    "wreck": "14.x.x"
+    "@hapi/lab": "22.x.x",
+    "@hapi/nes": "11.x.x",
+    "opentracing": "0.14.x",
+    "traci": "2.x.x",
+    "@hapi/wreck": "17.x.x"
   },
   "dependencies": {
-    "boom": "7.x.x",
-    "graphql": "14.1.x",
+    "@hapi/boom": "9.x.x",
+    "graphql": "14.5.x",
     "apollo-server-module-graphiql": "1.4.x",
     "lodash.merge": "4.6.x"
   }
