@@ -160,6 +160,53 @@ describe('makeExecutableSchema()', () => {
     expect(res.result.data.person.lastname).to.equal('PLUCK');
   });
 
+  it('correctly overrides custom scalar types when a resolver is provided', async () => {
+    const schema = `
+      scalar ISODateString
+
+      type Person {
+        dateOfBirth: ISODateString!
+      }
+
+      type Query {
+        person: Person!
+      }
+    `;
+
+    const resolvers = {
+      ISODateString: new GraphQL.GraphQLScalarType({
+        name: 'ISODateString',
+        description: 'An ISO 8601 formatted date string',
+        serialize (value) {
+          return 'baz';
+        }
+      }),
+      Query: {
+        person: () => {
+          return {
+            dateOfBirth: 'foobar'
+          };
+        }
+      }
+    };
+
+    const executable = Utils.makeExecutableSchema({ schema, resolvers });
+    expect(executable instanceof GraphQL.GraphQLSchema).to.be.true();
+
+    const type = executable.getType('ISODateString');
+    expect(type.serialize('foobar')).to.equal('baz');
+
+    const server = Hapi.server({ debug: { request: ['error'] } });
+    await server.register({ plugin: Graphi, options: { schema: executable } });
+
+    await server.initialize();
+
+    const payload = { query: 'query { person { dateOfBirth } }' };
+    const res = await server.inject({ method: 'POST', url: '/graphql', payload });
+    expect(res.statusCode).to.equal(200);
+    expect(res.result.data.person.dateOfBirth).to.equal('baz');
+  });
+
   it('errors when resolver missing from schema', () => {
     const schema = `
       type Person {
