@@ -16,7 +16,7 @@ const schema = `
   }
 `;
 
-const getPerson = function (args, request) {
+const getPerson = function(args, request) {
   return new Promise((resolve) => {
     resolve({ firstname: 'billy', lastname: 'jean' });
   });

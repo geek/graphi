@@ -130,11 +130,11 @@ describe('makeExecutableSchema()', () => {
         }
       },
       Person: {
-        firstname: function (root, args, request) {
+        firstname: function(root, args, request) {
           expect(this.fu).to.equal('bar');
           return root.firstname.toUpperCase();
         },
-        lastname: function (root, args, request) {
+        lastname: function(root, args, request) {
           expect(this.fu).to.equal('bar');
           return root.lastname.toUpperCase();
         }
@@ -177,7 +177,7 @@ describe('makeExecutableSchema()', () => {
       ISODateString: new GraphQL.GraphQLScalarType({
         name: 'ISODateString',
         description: 'An ISO 8601 formatted date string',
-        serialize (value) {
+        serialize(value) {
           return 'baz';
         }
       }),

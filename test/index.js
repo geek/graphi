@@ -46,7 +46,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'tom', lastname: 'arnold' };
@@ -78,7 +78,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'tom', lastname: 'arnold' };
@@ -125,7 +125,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -355,7 +355,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'tom', lastname: 'arnold' };
@@ -393,7 +393,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -439,7 +439,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -478,7 +478,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return Promise.resolve({ firstname: 'tom', lastname: 'arnold' });
@@ -516,7 +516,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean' };
@@ -555,7 +555,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return Promise.reject(new Error('my custom error'));
@@ -595,7 +595,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -659,13 +659,13 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
     };
 
-    const createPerson = function (args, request) {
+    const createPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(args.lastname).to.equal('jean');
       expect(request.path).to.equal('/graphql');
@@ -704,7 +704,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
@@ -754,7 +754,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
@@ -802,7 +802,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
@@ -849,7 +849,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
@@ -899,7 +899,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean' };
@@ -931,7 +931,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return Promise.resolve({ firstname: 'tom', lastname: 'arnold' });
@@ -962,7 +962,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return Promise.resolve({ firstname: 'tom', lastname: 'arnold' });
@@ -993,7 +993,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       const error = new Error('my silly error');
       error.id = 'my id';
       throw error;
@@ -1003,7 +1003,7 @@ describe('graphi', () => {
       person: getPerson
     };
 
-    const formatError = function (error) {
+    const formatError = function(error) {
       expect(error.originalError.message).to.equal('my silly error');
       expect(error.originalError.id).to.equal('my id');
       error.originalError.custom = 'field';
@@ -1034,7 +1034,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return { errors: [new Error()] };
@@ -1064,7 +1064,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       return Promise.reject(new Error('my custom error'));
@@ -1096,7 +1096,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('tom');
       expect(request.path).to.equal('/graphql');
       throw new Error('my custom error');
@@ -1128,7 +1128,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       return Promise.resolve({ firstname: 'billy', lastname: 'jean' });
     };
 
@@ -1157,7 +1157,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       return Promise.resolve({ firstname: 'billy', lastname: 'jean' });
     };
 
@@ -1186,7 +1186,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       return Promise.resolve({ firstname: 'billy', lastname: 'jean' });
     };
 
@@ -1215,13 +1215,13 @@ describe('graphi', () => {
       }
     `;
 
-    const getFriends = function (args, request) {
+    const getFriends = function(args, request) {
       expect(args.firstname).to.equal('michael');
 
       return Promise.resolve([{ firstname: 'michael', lastname: 'jackson' }]);
     };
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
 
@@ -1259,13 +1259,13 @@ describe('graphi', () => {
       }
     `;
 
-    const getFriends = function (args, request) {
+    const getFriends = function(args, request) {
       expect(args.firstname).to.equal('michael');
 
       return Promise.resolve([{ firstname: 'michael', lastname: 'jackson' }]);
     };
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
 
@@ -1303,7 +1303,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1334,7 +1334,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1366,7 +1366,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1407,7 +1407,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1448,7 +1448,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1489,7 +1489,7 @@ describe('graphi', () => {
       }
     `;
 
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: '', lastname: 'jean', email: 'what' };
@@ -1616,13 +1616,13 @@ describe('graphi', () => {
 
 describe('server.registerSchema()', () => {
   it('will overwrite an existing schema', async () => {
-    const getPerson = function (args, request) {
+    const getPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(request.path).to.equal('/graphql');
       return { firstname: 'billy', lastname: 'jean' };
     };
 
-    const createPerson = function (args, request) {
+    const createPerson = function(args, request) {
       expect(args.firstname).to.equal('billy');
       expect(args.lastname).to.equal('jean');
       expect(request.path).to.equal('/graphql');
@@ -1682,7 +1682,7 @@ describe('server.registerSchema()', () => {
   });
 
   it('will register a new schema', async () => {
-    const getPeople = function (args, request) {
+    const getPeople = function(args, request) {
       return [{ firstname: 'billy', lastname: 'jean' }];
     };
 
@@ -1727,7 +1727,7 @@ internals.authTokenStrategy = {
   name: 'authtoken',
   version: '1.0.0',
   description: 'register hapi-auth-bearer-token strategy.',
-  register: function (server, options) {
+  register: function(server, options) {
     server.auth.strategy('test', 'bearer-access-token', {
       validate: defaultValidateFunc
     });
