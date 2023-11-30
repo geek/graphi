@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@hapi/boom": "10.x.x",
-    "graphql": "16.6.x",
+    "graphql": "16.x.x",
     "apollo-server-module-graphiql": "1.4.x",
     "lodash.merge": "4.6.x"
   }
