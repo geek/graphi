@@ -1,9 +1,0 @@
-version: ~> 1.0
-
-language: node_js
-
-import:
-  - geek/travis-templates:node_js.yml@main
-  - geek/travis-templates:os.yml@main
-
-sudo: false

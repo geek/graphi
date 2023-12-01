@@ -1,7 +1,7 @@
 # graphi
 hapi GraphQL server plugin
 
-[![Build Status](https://secure.travis-ci.org/geek/graphi.svg)](http://travis-ci.org/geek/graphi)
+![Build Status](https://github.com/geek/graphi/actions/workflows/build.yml/badge.svg)
 
 
 ## Options
